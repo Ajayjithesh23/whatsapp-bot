@@ -1,45 +1,67 @@
-/* Copyright (C) 2020 Yusuf Usta.
-
-Licensed under the  GPL-3.0 License;
-you may not use this file except in compliance with the License.
-
-WhatsAsena - Yusuf Usta
-Thanks to github/@justinthoms for base and helps.
-*/
-
-const Asena = require("../Utilis/events");
-const Config = require("../config");
-const tesseract = require("node-tesseract-ocr");
-const langs = require("langs");
-const Language = require("../language");
-const Lang = Language.getString("ocr");
-// let fm = Config.PRIVATE == true ? true : false;
+nst Asena = require("../Utilis/events");
+const { forwardOrBroadCast } = require("../Utilis/groupmute");
+const { getBuffer } = require('../Utilis/download');
+const { parseJid } = require("../Utilis/vote");
+// chnage url  custom photo and change caption if
+const url =  'https://i.imgur.com/DomBGMZ.jpeg'
 Asena.addCommand(
-  { pattern: "txt ?(.*)", fromMe: true, desc: Lang.OCR_DESC, usage: "txt en" },
+  { pattern: 'mforward ?(.*)', fromMe: true, desc: "Forward replied msg." },
   async (message, match) => {
-    if (message.reply_message === false || !message.reply_message.image)
-      return await message.sendMessage(Lang.NEED_REPLY);
-    await message.reply(Lang.DOWNLOADING);
-    var location = await message.reply_message.downloadAndSaveMediaMessage(
-      "yxy"
-    );
-    var dil;
-    if (match !== "") {
-      dil = langs.where("1", match);
-    } else {
-      dil = langs.where("1", Config.LANG.toLowerCase());
-    }
-    try {
-      var result = await tesseract.recognize(location, {
-        lang: dil[2],
-      });
-    } catch (e) {
-      return await message.reply(Lang.ERROR.format(e));
-    }
-    if (result === " " || result.length == 1) {
-      return await message.reply(Lang.ERROR.format(" Empty text"));
+    if (match == "") return await message.sendMessage("*Give me a jid*\nExample .mforward jid1 jid2 jid3 jid4 ...");
+    if (!message.reply_message)
+      return await message.sendMessage("*Reply to a Message*");
+    const buff = await getBuffer(url)
+    let options = {}
+  /* delete this line for forwarded tag
+  //for forward tag
+  options.contextInfo = {
+           forwardingScore: 5, // change it to 999 for many times forwarded
+           isForwarded: true 
+        } 
+     delete this line for forwarded tag   */ 
+    
+    
+   // to set custo, duration for audio
+    options.duration = 40000271 
+    
+   
+    
+    options.ptt = true // delete this if not need audio as voice always
+    options.quoted = {
+      key: {
+        fromMe: false,
+        participant: "0@s.whatsapp.net",
+        remoteJid: "status@broadcast"
+      },
+      message: {
+        "imageMessage": {
+          "jpegThumbnail": buff.buffer,
+          "caption":★_ꪶᴀᴊᴀʏ_sᴀᴅ✞ꫂ_★
+        }
+      }
     }
 
-    return await message.reply(Lang.RESULT.format(dil[2], result));
+    match.match(parseJid).map((jid) => {
+      forwardOrBroadCast(jid, message, options);
+    });
   }
 );
+
+// Asena.addCommand(
+
+//   { pattern: 'vforward ?(.*)', fromMe: true, desc: "Forward replied msg." },
+//   async (message, match) => {
+//     if (match == "") return await message.sendMessage("*Give me a jid*\nExample .mforward jid1 jid2 jid3 jid4 ...");
+//     if (!message.reply_message)
+//       return await message.sendMessage("*Give me a jid*\nExample .mforward jid1 jid2 jid3 jid4 ...");
+//       const { buffer, type, options } = await forward(match, message);
+//     options.viewOnce = true 
+//     match.match(parseJid).map(async jid => {
+//     if(jid.length < 30){
+//     await new Promise((r) => setTimeout(r, 3000));
+//     await message.client.sendMessage(jid, buffer, type, options);
+//     }
+//     })
+//   }
+// );
+    
